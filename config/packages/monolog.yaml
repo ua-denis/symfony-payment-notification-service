@@ -1,0 +1,16 @@
+monolog:
+  handlers:
+    main:
+      type: stream
+      path: "%kernel.logs_dir%/%kernel.environment%.log"
+      level: debug
+      formatter: monolog.formatter.line
+    console:
+      type: console
+      level: info
+      channels: [ "!event", "!doctrine" ]
+      formatter: monolog.formatter.line
+
+  formatters:
+    monolog.formatter.line:
+      format: "[%%datetime%%] %%channel%%.%%level_name%%: %%message%% %%context%% %%extra%%\n"

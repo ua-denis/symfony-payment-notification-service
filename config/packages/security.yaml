@@ -1,0 +1,16 @@
+security:
+  password_hashers:
+    Symfony\Component\Security\Core\User\User: bcrypt
+
+  providers:
+    users_in_memory: { memory: null }
+
+  firewalls:
+    main:
+      anonymous: true
+      custom_authenticators:
+        - App\Infrastructure\Security\JwtAuthenticator
+
+  access_control:
+    - { path: ^/payment, roles: ROLE_USER }
+

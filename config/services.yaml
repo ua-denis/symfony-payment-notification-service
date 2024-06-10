@@ -1,0 +1,67 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection,Entity,Migrations,Tests,Kernel.php}'
+
+  App\Domain\Repository\PaymentRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\PaymentRepository'
+  App\Domain\Repository\PaymentNotificationRepositoryInterface: '@App\Infrastructure\Persistence\Doctrine\Repository\PaymentNotificationRepository'
+
+  App\Domain\Service\PromotionCodeService:
+    arguments:
+      $strategyContainer: '@promotion.strategy_container'
+
+  App\Domain\Service\PromotionStrategy\PromotionStrategyInterface:
+    tags: [ 'promotion.strategy' ]
+
+  App\Domain\Service\PromotionStrategy\Bonus50Strategy:
+    tags:
+      - { name: 'promotion.strategy', id: 'BONUS50' }
+
+  App\Domain\Service\PromotionStrategy\Bonus100Strategy:
+    tags:
+      - { name: 'promotion.strategy', id: 'BONUS100' }
+
+  promotion.strategy_container:
+    class: Psr\Container\ContainerInterface
+    factory: [ '@service_container', 'get' ]
+    arguments:
+      - 'promotion.strategy_container'
+
+  App\Infrastructure\Persistence\Doctrine\Repository\PaymentNotificationRepository: ~
+  App\Service\PaymentNotificationHandler: ~
+  App\Infrastructure\Persistence\Doctrine\Repository\PaymentRepository: ~
+  App\Infrastructure\Security\JwtAuthenticator:
+    arguments:
+      $jwtSecret: '%env(JWT_SECRET)%'
+    tags:
+      - { name: 'monolog.logger', channel: 'security' }
+  App\Infrastructure\Validator\OnePayValidator:
+    arguments:
+      $validator: '@validator'
+  App\Infrastructure\Validator\TwoPayValidator:
+    arguments:
+      $validator: '@validator'
+  App\Infrastructure\Validator\ThreePayValidator:
+    arguments:
+      $validator: '@validator'
+  App\Infrastructure\Validator\PaymentValidatorFactory:
+    arguments:
+      $validatorMap:
+        onepay: '@App\Infrastructure\Validator\OnePayValidator'
+        twopay: '@App\Infrastructure\Validator\TwoPayValidator'
+        threepay: '@App\Infrastructure\Validator\ThreePayValidator'
+  App\Domain\Service\PaymentFactory: ~
+  App\Application\UseCase\ProcessPaymentUseCase: ~
+  App\Infrastructure\Service\PaymentProcessor\PaymentProcessorFactory:
+    arguments:
+      $processorMap:
+        onepay: '@App\Infrastructure\Service\PaymentProcessor\OnePayProcessor'
+        twopay: '@App\Infrastructure\Service\PaymentProcessor\TwoPayProcessor'
+        threepay: '@App\Infrastructure\Service\PaymentProcessor\ThreePayProcessor'
+  App\Infrastructure\Service\PaymentProcessor\OnePayProcessor: ~
+  App\Infrastructure\Service\PaymentProcessor\TwoPayProcessor: ~
+  App\Infrastructure\Service\PaymentProcessor\ThreePayProcessor: ~
